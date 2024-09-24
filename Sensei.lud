@@ -21,7 +21,13 @@
     (from)
     (to
       (intersection
-        (sites Direction from:(from))
+        (sites Direction
+          from:(from)
+          stop:(and
+            (!= (mover) (who at:(to)))
+            (!= 0 (who at:(to)))
+          )
+        )
         (sites Occupied by:Mover component:(id "Square" Mover))
       )
     )
