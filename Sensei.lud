@@ -19,7 +19,12 @@
       (intersection
         (sites Group
           from:(sites Left)
-          if:(= "OtherPlayer" (who at:(to)))
+          if:(
+            (or
+              (= "OtherPlayer" (who at:(to)))
+              (= 3 (who at:(to)))
+            )
+          )
         )
         (sites Right)
       )
@@ -33,7 +38,14 @@
 
 (define "AdjToEnemyGroup"
   (sites Around 
-    (sites Group at:#1 if:(= "OtherPlayer" (who at:(to))))
+    (sites Group at:#1
+      if:(
+        (or
+          (= "OtherPlayer" (who at:(to)))
+          (= 3 (who at:(to)))
+        )
+      )
+    )
     Orthogonal
     if:(= (mover) (who at:(to)))
   )
@@ -84,6 +96,7 @@
       )
     )
     (piece "Master" Each ("MasterMove"))
+    (piece "Square" Shared)
   })
   (rules
     (start {
@@ -91,6 +104,7 @@
       (place Stack "Square2" (sites Top))
       (place Stack items:{"Master1"} coord:"D1")
       (place Stack items:{"Master2"} coord:"D7")
+      (place "Square" {"A4" "D4" "G4"})
     })
     (play
       (if ("NewTurn")
