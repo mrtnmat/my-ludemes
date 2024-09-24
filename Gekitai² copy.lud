@@ -1,0 +1,41 @@
+(define "Repel"
+    (forEach Site (sites Distance from:(last To) (range 1))
+        (if
+            (=
+                (ahead (site) steps:1 (directions Cell from:(last To) to:(site)))
+                (site)
+            )
+            (remove (to))
+            (slide (from (site)) (directions Cell from:(last To) to:(from)))
+        )
+    )
+)
+(game "Gekitai"
+    (players 2) 
+    (equipment {
+        (board (square 6))
+        (piece "Disc")
+    })
+    (rules
+        (play
+            (move Add (to (sites Empty))
+                (then "Repel")
+            )
+        )
+        (end {
+            ("Line3Win")
+            (if
+                (= (count Pieces Mover) 8)
+                (result Mover Win)
+            )
+        })
+    )
+)
+
+//------------------------------------------------------------------------------
+
+(metadata
+    (graphics {
+        (piece Families {"Abstract" "Themed"})
+    })
+)

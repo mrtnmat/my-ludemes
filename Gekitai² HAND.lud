@@ -1,0 +1,133 @@
+(define "Repel"
+    (if
+        (=
+            (ahead (site) steps:1 (directions Cell from:(last To) to:(site)))
+            (site)
+        )
+        (fromTo
+            (from (site))
+            (to (mapEntry "HandSlot" (what at:(site))))
+        )
+        (slide (from (site)) (directions Cell from:(last To) to:(from)))
+    )
+)
+(define "PromoteLine3"
+    (move Select
+        (from (sites Occupied by:Mover))
+        (to 
+            (sites Around (from) Own distance:2)
+            if:(all Sites (sites Between from:(from) to:(to)) if:(= (mover) (who at:(site))))
+            
+        )
+        (then
+            (seq {
+                (remove (sites Between from:(last From) fromIncluded:True to:(last To) toIncluded:True))
+                (add (piece (id "BigCat" Mover)) (to (mapEntry "HandSlot" (id "BigCat" Mover))) count:3)
+            })
+        )
+    )
+)
+(define "Promote1"
+    (if (= 0 (count Pieces in:(sites Hand Mover)))
+        (move Remove (sites Occupied by:Mover container:"Board") 
+            (then (add (piece (id "BigCat" Mover)) (to (mapEntry "HandSlot" (id "BigCat" Mover))) count:1))
+        )
+    )
+)
+(define "PiecesAvailableForPromotion"
+    (>= 
+        (count Sites
+            in:(forEach 
+                (sites Occupied by:Mover container:0)
+                if:(>=
+                    (count Sites
+                        in:(sites Around (site) Own distance:2
+                            if:(all Sites (sites Between from:(site) to:(to)) if:(= (mover) (who at:(site))))
+                        )
+                    )
+                    1
+                )
+            )
+        )
+        1
+    )
+)
+
+(game "Gekitai²"
+    (players 2) 
+    (equipment {
+        (board (square 6))
+        (piece "Cat" Each)
+        (piece "BigCat" Each)
+        (hand Each size:2)
+        (map "HandSlot" {
+            (pair (id "Cat" P1) (handSite P1 0))
+            (pair (id "Cat" P2) (handSite P2 0)) 
+            (pair (id "BigCat" P1) (handSite P1 1)) 
+            (pair (id "BigCat" P2) (handSite P2 1)) 
+        })
+    })
+    (rules
+        (start
+            (place "Cat" "Hand" count:8)
+        )
+        (play
+            (if "SameTurn"
+                (or
+                    ("PromoteLine3")
+                    ("Promote1")
+                )
+                (move (from (sites Hand Mover)) (to (sites Empty))
+                    (then
+                        (seq {
+                            (forEach Site (sites Distance from:(last To) (range 1))
+                                (if 
+                                    (or
+                                        (= (id "BigCat" Mover) (what at:(last To)))
+                                        (or 
+                                            (= (id "Cat1") (what at:(site)))
+                                            (= (id "Cat2") (what at:(site)))
+                                        )
+                                    )
+                                    ("Repel")
+                                )
+                            )
+                            (if 
+                                (or
+                                    "PiecesAvailableForPromotion"
+                                    (= 0 (count Pieces in:(sites Hand Mover)))
+                                )
+                                (moveAgain)
+                            )
+                        })
+                    )
+                )
+            )
+        )
+        (end {
+            (if (is Line 3 what:(id "BigCat" Mover))
+                (result Mover Win))
+            (if
+                (and
+                    (= 0 (count Pieces in:(sites Hand Mover)))
+                    (= 0 (count Pieces Mover "Cat"))
+                )
+                (result Mover Win)
+            )
+        })
+    )
+)
+
+//------------------------------------------------------------------------------
+
+(metadata
+    (graphics {
+        (player Colour P1 (colour Grey))
+        (player Colour P2 (colour Orange))
+        (piece Scale "Cat" scaleX:0.65 scaleY:0.65)
+        (piece Scale "Cat" scaleX:1.4 scaleY:1.4)
+    })
+)
+
+
+(forEach (sites Occupied by:Mover) if:(= (state at:(site) 0)))

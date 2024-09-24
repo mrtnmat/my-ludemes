@@ -1,0 +1,39 @@
+(game "Bobail"
+    (players 2) 
+    (equipment {
+        (board (square 5))
+        (piece "Disc" Each
+            (move (from) (to (sites LineOfSight Farthest at:(from))))
+        )
+        (piece "Bobail" Shared
+            ("StepToEmpty" Adjacent (then (moveAgain)))
+        )
+    })
+    (rules
+        (start {
+            (place "Disc1" (sites Bottom))
+            (place "Disc2" (sites Top))
+            (place "Bobail" (sites Centre))
+        })
+        (play
+            (if (is Even (count Moves))
+                (forEach Piece)
+                (forEach Piece Shared)
+            )
+        )
+        (end {
+            (if (no Moves Next) (result Mover Win))
+            (if (is Within (id "Bobail") in:(sites Bottom)) (result P1 Win))
+            (if (is Within (id "Bobail") in:(sites Top)) (result P2 Win))
+        })
+    )
+)
+
+//------------------------------------------------------------------------------
+
+(metadata
+    (graphics {
+        (piece Families {"Abstract" "Themed"})
+        (piece Colour "Bobail" fillColour:(colour Brown))
+    })
+)
