@@ -2,6 +2,43 @@
   (set Var #1 (+ 1 (var #1)))
 )
 
+(define "IsMoverBlocked"
+  (is Blocked
+    Orthogonal
+    {
+      (sites Occupied by:Mover)
+      (sites Top)
+      (sites Bottom)
+    }
+  )
+)
+
+(define "IndexOfEnemyPieceBelongingToWall"
+  (arrayValue
+    (array
+      (intersection
+        (sites Group
+          from:(sites Left)
+          if:(= "OtherPlayer" (who at:(to)))
+        )
+        (sites Right)
+      )
+    )
+  index:0)
+)
+
+(define "OtherPlayer"
+  (if (= (mover) 1) 2 1)
+)
+
+(define "AdjToEnemyGroup"
+  (sites Around 
+    (sites Group at:#1 if:(= "OtherPlayer" (who at:(to))))
+    Orthogonal
+    if:(= (mover) (who at:(to)))
+  )
+)
+
 (define "ResetMoveCounters"
   (set Var "SquareMovesCounter"
     (then (set Var "MasterMovesCounter"))
@@ -72,6 +109,10 @@
       (if
         (is In (where "Master" 2) (sites Bottom))
         (result P2 Win)
+      )
+      (if
+        (>= (count Pieces in:("AdjToEnemyGroup" ("IndexOfEnemyPieceBelongingToWall"))) 3)
+        (result Mover Win)
       )
     })
   )
