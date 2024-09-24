@@ -1,0 +1,81 @@
+(define "Inc"
+  (set Var #1 (+ 1 (var #1)))
+)
+
+(define "ResetMoveCounters"
+  (set Var "SquareMovesCounter"
+    (then (set Var "MasterMovesCounter"))
+  )
+)
+
+(define "PlayTurn"
+  (or {
+    (if (< (var "MasterMovesCounter") 0) (forEach Piece "Master") (then (if (< (count MovesThisTurn) 2) (moveAgain))))
+    (if (< (var "SquareMovesCounter") 1) (forEach Piece "Square") (then (if (< (count MovesThisTurn) 2) (moveAgain))))
+    (if (> (count MovesThisTurn) 0) (move Pass))
+  })
+)
+
+(define "MasterMove"
+  (move
+    (from)
+    (to
+      (intersection
+        (sites Direction from:(from))
+        (sites Occupied by:Mover component:(id "Square" Mover))
+      )
+    )
+    (then ("Inc" "MasterMovesCounter"))
+  )
+)
+
+(game "Sensei"
+  (players 2)
+  (equipment {
+    (board (square 7))
+    (piece "Square" Each
+      (if (= (level) (topLevel at:(from)))
+        (move Slide Orthogonal
+          (then ("Inc" "SquareMovesCounter"))
+        )
+      )
+    )
+    (piece "Master" Each ("MasterMove"))
+  })
+  (rules
+    (start {
+      (place Stack "Square1" (sites Bottom))
+      (place Stack "Square2" (sites Top))
+      (place Stack items:{"Master1"} coord:"D1")
+      (place Stack items:{"Master2"} coord:"D7")
+    })
+    (play
+      (if ("NewTurn")
+        (do
+          ("ResetMoveCounters")
+          next:("PlayTurn")
+        )
+        ("PlayTurn")
+      )
+    )
+    (end {
+      (if
+        (is In (where "Master" 1) (sites Top))
+        (result P1 Win)
+      )
+      (if
+        (is In (where "Master" 2) (sites Bottom))
+        (result P2 Win)
+      )
+    })
+  )
+)
+
+//-------------------------------------------------
+
+(metadata
+  (graphics {
+    (player Colour P1 (colour Green))
+    (player Colour P2 (colour Red))
+  })
+)
